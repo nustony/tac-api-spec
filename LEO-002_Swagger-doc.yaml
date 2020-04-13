@@ -1,0 +1,1089 @@
+swagger: '2.0'
+info:
+  description: The API required by the Leo App to browser rooms and place bookings
+  version: 1.9.0
+  title: Leo App API
+  contact:
+    email: proberts@nomensa.com
+  license:
+    name: Private
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /user/register:
+    post:
+      summary: Register User
+      consumes:
+        - application/json
+      parameters:
+        - name: _format=json
+          in: query
+          required: true
+          type: string
+          description: The format must be set to JSON
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          x-example: 'Content-Type: application/json'
+        - name: x-mobile-app
+          in: header
+          required: true
+          type: string
+          x-example: 'x-mobile-app: 1'
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - field_first_name
+              - field_surname
+              - mail
+              - name
+            properties:
+              name:
+                required:
+                  - value
+                type: object
+                description: 'The username that the user will log in with, this should be always the same as their email address'
+                properties:
+                  value:
+                    type: string
+              mail:
+                required:
+                  - value
+                type: object
+                description: "The user's email address"
+                properties:
+                  value:
+                    type: string
+              field_first_name:
+                required:
+                  - value
+                type: object
+                description: "The user's first name"
+                properties:
+                  value:
+                    type: string
+              field_surname:
+                required:
+                  - value
+                type: object
+                description: "The user's surname"
+                properties:
+                  value:
+                    type: string
+            description: TBC
+          x-examples:
+            application/json: |-
+              {
+              "name": { "value": "fooBar" },
+              "mail": { "value": "foo@bar.com" },
+              "field_first_name": {"value": "foo"},
+              "field_surname": {"value": "bar"}
+              }
+      responses:
+        '200':
+          description: Status 200
+  /oauth/token:
+    post:
+      summary: Log in
+      consumes:
+        - multipart/form-data
+      parameters:
+        - name: _format
+          in: query
+          required: false
+          type: string
+          x-example: '_format: json'
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          x-example: 'Content-Type: application/json'
+        - name: x-mobile-app
+          in: header
+          required: true
+          type: string
+          x-example: 'x-mobile-app: 1'
+        - name: username
+          in: formData
+          required: true
+          type: string
+          description: The username of the user logging in
+          x-example: proberts@nomensa.com
+        - name: password
+          in: formData
+          required: true
+          type: string
+          description: "The user's password"
+          x-example: password123
+        - name: grant_type
+          in: formData
+          required: true
+          type: string
+          description: 'The type of grant, typically password'
+          x-example: password
+        - name: client_id
+          in: formData
+          required: true
+          type: string
+          description: 'The id of the client that’s connecting, will be different depending on the environment'
+          x-example: 12e9fe64-0b46-45fb-9719-fab2d9727783
+      responses:
+        '200':
+          description: Status 200
+  /api/me:
+    get:
+      summary: "Get current user's data"
+      parameters:
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          x-example: 'Content-Type: application/json'
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          x-example: 'Authorization: Bearer {bearer_token}'
+        - name: x-mobile-app
+          in: header
+          required: false
+          type: string
+          x-example: 'x-mobile-app: 1'
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            required:
+              - user
+            type: object
+            properties:
+              user:
+                type: array
+                items:
+                  required:
+                    - email
+                    - first_name
+                    - internal
+                    - surname
+                  type: object
+                  properties:
+                    email:
+                      type: string
+                    first_name:
+                      type: string
+                    surname:
+                      type: string
+                    internal:
+                      type: string
+                      description: A user is internal if they are associated with a company that has a subscription.
+                      example: 'internal: 1'
+                    home_centre:
+                      type: string
+        '500':
+          description: Error handling.
+          schema:
+            required:
+              - status
+            type: object
+            properties:
+              status:
+                required:
+                  - code
+                  - message
+                type: object
+                properties:
+                  code:
+                    type: string
+                    description: "Exception code or simple string such as 'failed'."
+                  message:
+                    type: string
+                    description: Exception/error message(s).
+  /api/cv-contact-person/ids:
+    get:
+      summary: "Get id's and names of the cv_contact_person entities associated with the logged in user."
+      parameters:
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          x-example: 'Content-Type: application/json'
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          x-example: 'Authorization: Bearer {bearer_token}'
+        - name: x-mobile-app
+          in: header
+          required: true
+          type: string
+          x-example: 'x-mobile-app: 1'
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            required:
+              - contacts
+            type: object
+            properties:
+              contacts:
+                type: array
+                items:
+                  required:
+                    - id
+                    - name
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: CT103566
+                    name:
+                      type: string
+                      example: Joe Bloggs
+        '500':
+          description: Status 500
+          schema:
+            required:
+              - status
+            type: object
+            properties:
+              status:
+                required:
+                  - code
+                  - message
+                type: object
+                properties:
+                  code:
+                    type: string
+                    description: "Exception code of a simple string such as 'failed'."
+                  message:
+                    type: string
+                    description: An informative message.
+  /api/availability-search:
+    get:
+      summary: Availability search
+      description: 'Returns a list of rooms filtered by the start_time, duration, and capacity query parameters.'
+      parameters:
+        - name: start_time
+          in: query
+          required: true
+          type: string
+          description: The date and time when the room is available.
+          x-example: '2019-09-01T10:00:00'
+        - name: duration
+          in: query
+          required: true
+          type: string
+          description: The duration that the room is required for in hours.
+          x-example: '4.25'
+        - name: capacity
+          in: query
+          required: false
+          type: string
+          description: The minimum room size required for the booking.
+          x-example: '1'
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          x-example: 'Content-Type: application/json'
+        - name: x-mobile-app
+          in: header
+          required: true
+          type: string
+          x-example: 'x-mobile-app: 1'
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            required:
+              - rooms
+            type: object
+            properties:
+              rooms:
+                type: array
+                items:
+                  required:
+                    - building_code
+                    - room_code
+                  type: object
+                  properties:
+                    room_code:
+                      type: string
+                    building_code:
+                      type: string
+        '500':
+          description: Error handling.
+          schema:
+            required:
+              - status
+            type: object
+            properties:
+              status:
+                required:
+                  - code
+                  - message
+                type: object
+                properties:
+                  code:
+                    type: string
+                    description: "Exception code or simple string such as 'failed'."
+                  message:
+                    type: string
+                    description: Exception/error message(s).
+  /api/bookings:
+    get:
+      summary: "Fetch all of a user's bookings within a time period"
+      parameters:
+        - name: start_date
+          in: query
+          required: true
+          type: string
+          format: date
+          description: 'The first date to retrieve bookings from, in Y-m-d format.'
+        - name: end_date
+          in: query
+          required: true
+          type: string
+          description: 'The last date to retrieve bookings for, in Y-m-d format.'
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          x-example: 'Content-Type: application/json'
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          x-example: 'Authorization: Bearer {bearer_token}'
+        - name: x-mobile-app
+          in: header
+          required: false
+          type: string
+          x-example: 'x-mobile-app: 1'
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            required:
+              - bookings
+            type: object
+            properties:
+              bookings:
+                type: array
+                items:
+                  $ref: '#/definitions/BookingResponse'
+        '500':
+          description: Status 500
+          schema:
+            required:
+              - status
+            type: object
+            properties:
+              status:
+                required:
+                  - code
+                  - message
+                type: object
+                properties:
+                  code:
+                    type: string
+                    description: "Exception code or a simple string such as 'failed'."
+                  message:
+                    type: string
+                    description: Exception/error message(s).
+    post:
+      summary: Create new booking
+      description: 'This will create a booking, update the booking availability, and tag the booking which reserves it.'
+      consumes: []
+      parameters:
+        - name: _format
+          in: query
+          required: false
+          type: string
+          x-example: '_format: json'
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          x-example: 'Content-Type: application/json'
+        - name: x-mobile-app
+          in: header
+          required: true
+          type: string
+          x-example: 'x-mobile-app: 1'
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - building_code
+              - duration
+              - room_code
+              - start_time
+            properties:
+              room_code:
+                type: string
+                description: The room code to be booked
+                example: MIC
+              building_code:
+                type: string
+                description: The building code that room is in
+                example: BOARDROOM1
+              start_time:
+                type: string
+                format: date-time
+                description: The start time and date of the booking
+                example: '2019-08-22T07:13:44Z'
+              duration:
+                type: number
+                description: The amount of time that room is being booked for in hours
+                example: 6.25
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            required:
+              - booking
+            type: object
+            properties:
+              booking:
+                type: array
+                items:
+                  required:
+                    - reference_code
+                  type: object
+                  properties:
+                    reference_code:
+                      type: string
+        '500':
+          description: Error handling.
+          schema:
+            required:
+              - status
+            type: object
+            properties:
+              status:
+                required:
+                  - code
+                  - message
+                type: object
+                properties:
+                  code:
+                    type: string
+                    description: "Exception code or simple string such as 'failed'."
+                  message:
+                    type: string
+                    description: Exception/error message(s)
+      security: []
+  '/api/bookings/{booking_no}':
+    put:
+      summary: Update a booking
+      consumes: []
+      parameters:
+        - name: _format
+          in: query
+          required: false
+          type: string
+          x-example: _format=json
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          x-example: 'Content-Type: application/json'
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          x-example: 'Authorization: Bearer {bearer_token}'
+        - name: x-mobile-app
+          in: header
+          required: true
+          type: string
+          x-example: 'x-mobile-app: 1'
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            description: All of the elements in the body are optional but if you must at-least supply an empty array.
+            properties:
+              booking_name:
+                type: string
+              layout_code:
+                type: string
+              delegates:
+                type: integer
+              extras:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    Extra:
+                      type: object
+                      required:
+                        - code
+                        - quantity
+                      properties:
+                        code:
+                          type: string
+                        quantity:
+                          type: string
+                  required:
+                    - Extra
+          x-examples:
+            application/json:
+              booking_name: Important meeting.
+              layout_code: '1'
+              delegates: '4'
+              extras:
+                - code: LITREJUICE
+                  quantity: 3
+                - code: PLASMAHOUR
+                  quantity: 1
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            type: object
+            properties:
+              status:
+                type: object
+                required:
+                  - code
+                  - message
+                properties:
+                  code:
+                    type: string
+                    example: Success
+                  message:
+                    type: string
+                    description: An informative message.
+              booking:
+                type: object
+                properties:
+                  ACCEPTURL:
+                    type: string
+                  AMOUNT:
+                    type: string
+                  CURRENCY:
+                    type: string
+                  EMAIL:
+                    type: string
+                  LANGUAGE:
+                    type: string
+                  ORDERID:
+                    type: string
+                  PSPID:
+                    type: string
+                  SHASIGN:
+                    type: string
+            required:
+              - status
+        '500':
+          description: Error handling.
+          schema:
+            required:
+              - status
+            type: object
+            properties:
+              status:
+                required:
+                  - code
+                  - message
+                type: object
+                properties:
+                  code:
+                    type: string
+                    description: "Exception code or simple string such as 'failed'."
+                  message:
+                    type: string
+                    description: Exception/error message(s)
+    delete:
+      summary: Abandon booking
+      description: "When a user cancels a booking we need to 'untag' the booking so that the booking space is available to someone else (or themselves) again"
+      parameters:
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          x-example: 'Content-Type: application/json'
+        - name: x-mobile-app
+          in: header
+          required: true
+          type: string
+          x-example: 'x-mobile-app: 1'
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            required:
+              - status
+            type: object
+            properties:
+              status:
+                required:
+                  - code
+                  - message
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: Success
+                  message:
+                    type: string
+                    description: An informative message.
+        '500':
+          description: If an exception occurs on the server then the exception message and a 500 status code are returned.
+          schema:
+            required:
+              - status
+            type: object
+            properties:
+              status:
+                required:
+                  - code
+                  - message
+                type: object
+                properties:
+                  code:
+                    type: string
+                    description: "Exception code or simple string such as 'failed'."
+                  message:
+                    type: string
+                    description: Exception/error message(s).
+    parameters:
+      - name: booking_no
+        in: path
+        required: true
+        type: string
+  '/api/bookings/finalise/{booking_no}':
+    put:
+      summary: Finalise a booking
+      parameters:
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          x-example: 'Content-Type: application/json'
+        - name: Authorization
+          in: header
+          required: false
+          type: string
+          x-example: 'Authorization: Bearer {bearer_token}'
+        - name: x-mobile-app
+          in: header
+          required: true
+          type: string
+          x-example: 'x-mobile-app: 1'
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            required:
+              - status
+            type: object
+            properties:
+              status:
+                required:
+                  - code
+                  - message
+                type: object
+                properties:
+                  code:
+                    type: string
+                    example: Success
+                  message:
+                    type: string
+                    description: An informative message.
+        '500':
+          description: Status 500
+          schema:
+            required:
+              - status
+            type: object
+            properties:
+              status:
+                required:
+                  - code
+                  - message
+                type: object
+                properties:
+                  code:
+                    type: string
+                    description: Exception code or simple string such as ‘failed’.
+                  message:
+                    type: string
+                    description: Exception/error message(s).
+    parameters:
+      - name: booking_no
+        in: path
+        required: true
+        type: string
+  /api/buildings:
+    get:
+      summary: Fetch all buildings
+      description: |
+        Get all required information about all buildings
+      parameters: []
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            required:
+              - buildings
+            type: object
+            properties:
+              buildings:
+                type: array
+                items:
+                  $ref: '#/definitions/Building'
+          examples:
+            application/json: '{"buildings":[{...}]}'
+  /api/rooms:
+    get:
+      summary: Fetch all rooms
+      description: Retrieve all required information about all rooms
+      parameters: []
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            type: object
+            properties:
+              rooms:
+                type: array
+                items:
+                  $ref: '#/definitions/Room'
+  /api/extras:
+    get:
+      summary: Fetch all extras
+      description: Returns a list of all available extras and their attributes
+      parameters: []
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            required:
+              - extras
+            type: object
+            properties:
+              extras:
+                type: array
+                items:
+                  $ref: '#/definitions/Extra'
+  /api/barclaycard-epdq/digest:
+    post:
+      summary: Generate digest hash
+      description: 'ePDQ request must be signed with a shared secret, we send the request fields to the server where the hash is generated and returned back via this API'
+      consumes: []
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            type: object
+            description: "The body is an object of all the normal properties you'd send to ePDQ, they don't need to be caps and they don't need to be in any specific order. The server will pluck out the fields that it needs and ignore anything it doesn't want."
+      responses:
+        '200':
+          description: Status 200
+      security:
+        - Cookie: []
+securityDefinitions:
+  Cookie:
+    type: apiKey
+    name: Set-Cookie
+    in: header
+definitions:
+  Image:
+    type: object
+    required:
+      - url
+    properties:
+      url:
+        type: string
+        description: The URL of where to find the image
+      width:
+        type: integer
+        description: The width of the image in pixels
+      height:
+        type: string
+        description: The height of the image in pixels
+      keywords:
+        type: array
+        description: Keywords to used to tag the image
+        items:
+          type: string
+      title:
+        type: string
+        description: The title of the image
+      description:
+        type: string
+        description: A description of the image
+  User:
+    type: object
+    description: A Drupal user
+    example: |-
+      {
+         "csrf_token" : "57sTS-KS7UoYAWAPyzt0iJmo300CFct3jdKyWM-UiiQ",
+         "logout_token" : "zzRaD8ZgLT1TkG804mYpVVTyM-pgoDm4h9XZ9JHSoCw",
+         "current_user" : {
+            "roles" : [
+               "authenticated",
+               "administrator"
+            ],
+            "name" : "admin",
+            "uid" : "1"
+         }
+      }
+  BookingRequest:
+    type: object
+    required:
+      - building_code
+      - date
+      - duration
+      - room_code
+      - start_time
+    properties:
+      date:
+        type: string
+        format: date
+        description: The date of the booking
+      start_time:
+        type: string
+        description: The start time of the booking
+      duration:
+        type: number
+        description: The number of hours the room is booked for
+      room_code:
+        type: string
+        description: "The internal code of the room that's being booked"
+      building_code:
+        type: string
+        description: The internal code of the building being booked
+      notes:
+        type: string
+        description: User notes about this particular booking
+      delegates:
+        type: string
+        description: The number of people the booking is for
+      extras:
+        type: array
+        description: A list of extras ordered for the booking
+        items:
+          type: object
+          properties:
+            extra_code:
+              type: string
+              description: The internal code of the extra
+            quantity:
+              type: string
+              description: The quantity of this particular extra required
+  BookingResponse:
+    type: object
+    required:
+      - building_code
+      - duration
+      - room_code
+      - start_time
+    properties:
+      room_code:
+        type: string
+        description: The CentreVision code of the room
+      building_code:
+        type: string
+        description: The CentreVision code for the building
+      start_time:
+        type: string
+        format: date-time
+        description: The time when the booking starts
+      duration:
+        type: string
+        description: The duration of the booking
+      notes:
+        type: string
+        description: Any notes that were made regarding the booking
+  BookingConfirmation:
+    type: object
+    properties:
+      success_status:
+        type: string
+        example: success
+      message:
+        type: string
+        description: A friendly display message presented to user
+  Tag:
+    type: object
+    required:
+      - building_code
+      - duration
+      - room_code
+      - start_time
+    properties:
+      building_code:
+        type: string
+        description: "The internal building code for the room that's being booked"
+      room_code:
+        type: string
+        description: "The internal room code for the room that's being booked"
+      start_time:
+        type: string
+        format: date-time
+        description: The start date and time of the booking thats being tagged.
+      duration:
+        type: number
+        description: "The duration of the booking that's being tagged"
+    description: 'A tagged room means that it is reserved to the user that tagged it for a short amount of time, or until they have completed the payment process'
+  Booking Extra:
+    type: object
+    required:
+      - extraCode
+      - quantity
+    properties:
+      extraCode:
+        type: string
+        description: The unique internal code for a particular extra
+      quantity:
+        type: integer
+        description: The quantity of a particular extra required
+  Extra:
+    type: object
+    required:
+      - costs
+      - name
+    properties:
+      name:
+        type: string
+        description: The name of the extra
+      description:
+        type: string
+        description: A description of the extra (can be html)
+      code:
+        type: string
+        description: A short unique code referencing this Extra
+      type:
+        type: string
+        example: technology
+      is_singular:
+        type: boolean
+        description: Is this an extra that a user can have multiples of?
+      costs:
+        type: array
+        description: An array of various costs associated to the extras
+        items:
+          $ref: '#/definitions/Cost'
+    description: An extra that can be added to a room booking
+  Building:
+    type: object
+    required:
+      - address
+      - code
+      - latitude
+      - longitude
+      - name
+      - postcode
+    properties:
+      name:
+        type: string
+        description: The display name of the building
+      code:
+        type: string
+        description: The unique internal building code
+      latitude:
+        type: number
+        description: The latitude of the building
+      longitude:
+        type: number
+        description: The longitude of the building
+      address:
+        type: array
+        description: Address lines of the building
+        items:
+          type: string
+      postcode:
+        type: string
+        description: The postcode of the building
+      contact_email:
+        type: string
+        description: The support email address for this building
+      contact_number:
+        type: string
+        description: The support telephone number for this building
+      images:
+        type: array
+        description: Images used to show off the building
+        items:
+          $ref: '#/definitions/Image'
+  Room:
+    type: object
+    required:
+      - building_code
+      - code
+      - name
+    properties:
+      name:
+        type: string
+        description: The name of the room
+      maximum_capacity:
+        type: integer
+        description: The maximum number of people the room can hold
+      code:
+        type: string
+        description: The internal code used to identify this room
+      available_layouts:
+        type: array
+        description: A list of available configurations for this room
+        items:
+          type: string
+      available_extras:
+        type: array
+        description: A list of available extras codes for a room
+        items:
+          type: string
+      images:
+        type: array
+        description: Images related to the room
+        items:
+          $ref: '#/definitions/Image'
+      description:
+        type: string
+        description: Some short information about the room
+      opening_time:
+        type: string
+        description: The earliest time of day that a room can be booked
+      closing_time:
+        type: string
+        description: The latest time that a room can be booked
+      costs:
+        type: array
+        items:
+          $ref: '#/definitions/Cost'
+      building_code:
+        type: string
+        description: The CentreVision building code where this room is
+  Cost:
+    type: object
+    properties:
+      amount:
+        type: string
+        description: Cost
+      currency:
+        type: string
+        description: Currency of this cost ISO 4217 code
+      tier:
+        type: string
+        description: The pricing tier of this cost
+        example: standard
+      type:
+        type: string
+        description: The type of this cost
+        example: per_hour
+      vat_code:
+        type: string
+        example: standard
