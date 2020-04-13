@@ -43,6 +43,7 @@ paths:
               - field_surname
               - mail
               - name
+              - password
             properties:
               name:
                 required:
@@ -76,6 +77,30 @@ paths:
                 properties:
                   value:
                     type: string
+              password:
+                required:
+                  - value
+                type: object
+                description: "The user's password"
+                properties:
+                  value:
+                    type: string
+              phone_number:
+                required:
+                  - value
+                type: object
+                description: "The user's phone number"
+                properties:
+                  value:
+                    type: string
+              company:
+                required:
+                  - value
+                type: object
+                description: "The user's company"
+                properties:
+                  value:
+                    type: string
             description: TBC
           x-examples:
             application/json: |-
@@ -83,7 +108,10 @@ paths:
               "name": { "value": "fooBar" },
               "mail": { "value": "foo@bar.com" },
               "field_first_name": {"value": "foo"},
-              "field_surname": {"value": "bar"}
+              "field_surname": {"value": "bar"},
+              "password": {"value": "password"},
+              "phone_number": {"value": "+84999999999"},
+              "company": {"value": "Foo Com"},
               }
       responses:
         '200':
@@ -271,13 +299,13 @@ paths:
       parameters:
         - name: start_time
           in: query
-          required: true
+          required: false
           type: string
-          description: The date and time when the room is available.
+          description: The date and time when the room is available
           x-example: '2019-09-01T10:00:00'
         - name: duration
           in: query
-          required: true
+          required: false
           type: string
           description: The duration that the room is required for in hours.
           x-example: '4.25'
@@ -287,6 +315,44 @@ paths:
           type: string
           description: The minimum room size required for the booking.
           x-example: '1'
+        - name: latitude
+          in: query
+          required: false
+          type: number
+          description: The latitude of the current location.
+          x-example: 10.816335
+        - name: longitude
+          in: query
+          required: false
+          type: number
+          description: The longitude of the current location.
+          x-example: 106.649932
+        - name: featured
+          in: query
+          required: false
+          type: boolean
+          description: true if the request is for getting featured rooms.
+          x-example: true
+        - name: layout
+          in: query
+          required: false
+          type: string
+          description: room layout
+          x-example: Boardroom
+        - name: sort_by
+          in: query
+          required: false
+          type: string
+          description: sort by distance or price
+          x-example: distance
+          enum: [distance, price]
+        - name: sort_direction
+          in: query
+          required: false
+          type: string
+          description: sort direction
+          x-example: asc
+          enum: [asc, desc]
         - name: Content-Type
           in: header
           required: true
@@ -311,12 +377,53 @@ paths:
                   required:
                     - building_code
                     - room_code
+                    - name
+                    - address
+                    - images
+                    - maximum_capacity
+                    - costs
+                    - latitude
+                    - longitude
+                    - layout
                   type: object
                   properties:
                     room_code:
                       type: string
                     building_code:
                       type: string
+                    name:
+                      type: string
+                    address:
+                      type: string
+                    postcode:
+                      type: string
+                    images:
+                      type: array
+                      description: Images used to show off the room
+                      items:
+                        $ref: '#/definitions/Image'
+                    distance:
+                      type: number
+                      description: distance from the room to current location if latitude and longitude provided.
+                    maximum_capacity:
+                      type: integer
+                      description: The maximum number of people the room can hold
+                    costs:
+                      type: array
+                      description: An array of various costs associated to the room
+                      items:
+                        $ref: '#/definitions/Cost'
+                    latitude:
+                      type: number
+                      description: The latitude of the room
+                    longitude:
+                      type: number
+                      description: The longitude of the room
+                    layout:
+                      type: string
+                      description: room layout
+
+
         '500':
           description: Error handling.
           schema:
@@ -348,9 +455,9 @@ paths:
           description: 'The first date to retrieve bookings from, in Y-m-d format.'
         - name: end_date
           in: query
-          required: true
+          required: false
           type: string
-          description: 'The last date to retrieve bookings for, in Y-m-d format.'
+          description: 'The last date to retrieve bookings for, in Y-m-d format. Blank means no end date limit.'
         - name: Content-Type
           in: header
           required: true
@@ -445,6 +552,9 @@ paths:
                 type: number
                 description: The amount of time that room is being booked for in hours
                 example: 6.25
+              booking_name:
+                type: string
+                description: Friendly name of the booking
       responses:
         '200':
           description: Status 200
@@ -605,6 +715,58 @@ paths:
                   message:
                     type: string
                     description: Exception/error message(s)
+    get:
+      summary: Get booking detail
+      parameters:
+        - name: _format
+          in: query
+          required: false
+          type: string
+          x-example: _format=json
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          x-example: 'Content-Type: application/json'
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          x-example: 'Authorization: Bearer {bearer_token}'
+        - name: x-mobile-app
+          in: header
+          required: true
+          type: string
+          x-example: 'x-mobile-app: 1'
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            required:
+              - booking
+            type: object
+            properties:
+              booking:
+                $ref: '#/definitions/BookingResponse'
+        '500':
+          description: Status 500
+          schema:
+            required:
+              - status
+            type: object
+            properties:
+              status:
+                required:
+                  - code
+                  - message
+                type: object
+                properties:
+                  code:
+                    type: string
+                    description: "Exception code or a simple string such as 'failed'."
+                  message:
+                    type: string
+                    description: Exception/error message(s).
     delete:
       summary: Abandon booking
       description: "When a user cancels a booking we need to 'untag' the booking so that the booking space is available to someone else (or themselves) again"
@@ -888,11 +1050,18 @@ definitions:
   BookingResponse:
     type: object
     required:
+      - booking_no
       - building_code
       - duration
       - room_code
       - start_time
+      - total_ex_vat
+      - total
+      - vat
     properties:
+      booking_no:
+        type: integer
+        description: Booking ID
       room_code:
         type: string
         description: The CentreVision code of the room
@@ -904,11 +1073,59 @@ definitions:
         format: date-time
         description: The time when the booking starts
       duration:
-        type: string
-        description: The duration of the booking
+        type: number
+        description: The duration of the booking in hours
       notes:
         type: string
         description: Any notes that were made regarding the booking
+      booking_name:
+        type: string
+        description: Friendly booking name
+      room_hire:
+        type: number
+        description: Room hire of the booking
+      discounts:
+        type: array
+        description: Applied discounts
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+              description: Discount name
+            discount_amount:
+              type: number
+              description: Discount amount
+      total_ex_vat:
+        type: number
+        description: Total cost without VAT
+      vat:
+        type: number
+        description: VAT amount
+      total:
+        type: number
+        description: Total cost
+      room:
+        type: object
+        properties:
+          name:
+            type: string
+            description: Room's name
+          address:
+            type: string
+            description: Room's address
+          postcode:
+            type: string
+            description: Room's postcode
+          maximum_capacity:
+            type: integer
+            description: The maximum number of people the room can hold
+          images:
+            type: array
+            description: Images used to show off the room
+            items:
+              $ref: '#/definitions/Image'
+
   BookingConfirmation:
     type: object
     properties:
