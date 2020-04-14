@@ -1,10 +1,10 @@
 swagger: '2.0'
 info:
-  description: The API required by the Leo App to browser rooms and place bookings
-  version: 1.9.0
-  title: Leo App API
+  description: The API required by The Argyll Club App to browser rooms and place bookings
+  version: 2.0.0
+  title: The Argyll Club v2 API
   contact:
-    email: proberts@nomensa.com
+    email: tony@nustechnology.com
   license:
     name: Private
 consumes:
@@ -295,7 +295,8 @@ paths:
   /api/availability-search:
     get:
       summary: Availability search
-      description: 'Returns a list of rooms filtered by the start_time, duration, and capacity query parameters.'
+      description: "Returns a list of rooms filtered by the start_time, duration and capacity query parameters. \n
+                    This is also used by the featured rooms carousel when featured is set to true and search nearby rooms when latitude and longitude parameters exist"
       parameters:
         - name: start_time
           in: query
@@ -337,8 +338,8 @@ paths:
           in: query
           required: false
           type: string
-          description: room layout
-          x-example: Boardroom
+          description: room layouts, seperated by comma
+          x-example: Boardroom,Cabaret
         - name: sort_by
           in: query
           required: false
@@ -416,9 +417,11 @@ paths:
                     latitude:
                       type: number
                       description: The latitude of the room
+                      x-example: 10.816335
                     longitude:
                       type: number
                       description: The longitude of the room
+                      x-example: 106.816335
                     layout:
                       type: string
                       description: room layout
@@ -446,6 +449,9 @@ paths:
   /api/bookings:
     get:
       summary: "Fetch all of a user's bookings within a time period"
+      description: |
+        Fetch all of a user's bookings within a time period. This is also used by upcoming bookings carousel with start_date at current date and no end_date
+
       parameters:
         - name: start_date
           in: query
@@ -890,10 +896,27 @@ paths:
         type: string
   /api/buildings:
     get:
-      summary: Fetch all buildings
+      summary: Fetch buildings
       description: |
         Get all required information about all buildings
-      parameters: []
+        This is also used by the featured locations carousel when featured is set to true and latitude, longitude parameters exist
+      parameters:
+        - name: latitude
+          in: query
+          required: false
+          type: number
+          description: Latitude of current location to find featured buildings
+        - name: longitude
+          in: query
+          required: false
+          type: number
+          description: Longitude of current location to find featured buildings
+        - name: featured
+          in: query
+          required: false
+          type: boolean
+          description: true if getting featured buildings
+          x-example: true
       responses:
         '200':
           description: Status 200
@@ -923,6 +946,23 @@ paths:
                 type: array
                 items:
                   $ref: '#/definitions/Room'
+  /api/rooms/{room_code}:
+    get:
+      summary: Fetch room detail
+      description: Retrieve all required information about a room
+      parameters:
+        - name: room_code
+          in: path
+          type: string
+          required: true
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            type: object
+            properties:
+              room:
+                $ref: '#/definitions/Room'
   /api/extras:
     get:
       summary: Fetch all extras
