@@ -931,6 +931,96 @@ paths:
                   $ref: '#/definitions/Building'
           examples:
             application/json: '{"buildings":[{...}]}'
+  /api/buildings/{building_code}/saved:
+    post:
+      summary: Save building to shortlist
+      parameters:
+        - name: building_code
+          in: path
+          type: string
+          required: true
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          x-example: 'Content-Type: application/json'
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          x-example: 'Authorization: Bearer {bearer_token}'
+        - name: x-mobile-app
+          in: header
+          required: false
+          type: string
+          x-example: 'x-mobile-app: 1'
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            type: object
+            properties:
+              building:
+                $ref: '#/definitions/Building'
+    delete:
+      summary: Remove building from shortlist
+      parameters:
+        - name: building_code
+          in: path
+          type: string
+          required: true
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          x-example: 'Content-Type: application/json'
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          x-example: 'Authorization: Bearer {bearer_token}'
+        - name: x-mobile-app
+          in: header
+          required: false
+          type: string
+          x-example: 'x-mobile-app: 1'
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            type: object
+            properties:
+              building:
+                $ref: '#/definitions/Building'
+  /api/buildings/saved:
+    get:
+      summary: Get buildings from shortlist
+      parameters:
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          x-example: 'Content-Type: application/json'
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          x-example: 'Authorization: Bearer {bearer_token}'
+        - name: x-mobile-app
+          in: header
+          required: false
+          type: string
+          x-example: 'x-mobile-app: 1'
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            type: object
+            properties:
+              buildings:
+                type: array
+                items:
+                  $ref: '#/definitions/Building'
   /api/rooms:
     get:
       summary: Fetch all rooms
@@ -963,6 +1053,96 @@ paths:
             properties:
               room:
                 $ref: '#/definitions/Room'
+  /api/rooms/{room_code}/saved:
+    post:
+      summary: Save room to shortlist
+      parameters:
+        - name: room_code
+          in: path
+          type: string
+          required: true
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          x-example: 'Content-Type: application/json'
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          x-example: 'Authorization: Bearer {bearer_token}'
+        - name: x-mobile-app
+          in: header
+          required: false
+          type: string
+          x-example: 'x-mobile-app: 1'
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            type: object
+            properties:
+              room:
+                $ref: '#/definitions/Room'
+    delete:
+      summary: Remove room from shortlist
+      parameters:
+        - name: room_code
+          in: path
+          type: string
+          required: true
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          x-example: 'Content-Type: application/json'
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          x-example: 'Authorization: Bearer {bearer_token}'
+        - name: x-mobile-app
+          in: header
+          required: false
+          type: string
+          x-example: 'x-mobile-app: 1'
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            type: object
+            properties:
+              room:
+                $ref: '#/definitions/Room'
+  /api/rooms/saved:
+    get:
+      summary: Get rooms from shortlist
+      parameters:
+        - name: Content-Type
+          in: header
+          required: true
+          type: string
+          x-example: 'Content-Type: application/json'
+        - name: Authorization
+          in: header
+          required: true
+          type: string
+          x-example: 'Authorization: Bearer {bearer_token}'
+        - name: x-mobile-app
+          in: header
+          required: false
+          type: string
+          x-example: 'x-mobile-app: 1'
+      responses:
+        '200':
+          description: Status 200
+          schema:
+            type: object
+            properties:
+              rooms:
+                type: array
+                items:
+                  $ref: '#/definitions/Room'
   /api/extras:
     get:
       summary: Fetch all extras
@@ -1277,6 +1457,9 @@ definitions:
         description: Images used to show off the building
         items:
           $ref: '#/definitions/Image'
+      saved:
+        type: boolean
+        description: the building is in shortlist or not
   Room:
     type: object
     required:
@@ -1324,6 +1507,9 @@ definitions:
       building_code:
         type: string
         description: The CentreVision building code where this room is
+      saved:
+        type: boolean
+        description: the room is in shortlist or not
   Cost:
     type: object
     properties:
